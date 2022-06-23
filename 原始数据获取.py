@@ -6,24 +6,26 @@ from raw_data_fetch import TushareFetcher, WindFetcher
 # Tushare数据源
 #---------------------------------------------------------------
 def TushareFetch():
+    start_dt, end_dt = '20210101', '20211231'
     fetcher = TushareFetcher()
     #---------------------------------------------------------------
     # 先下载数据到本地
     #---------------------------------------------------------------
-    fetcher.fetch_meta_data()
-    fetcher.fetch_trade_day()
-    fetcher.fetch_month_map()
-    fetcher.ensure_data(fetcher.daily, "__temp_daily__") #日行情表
-    fetcher.ensure_data(fetcher.suspend_d, "__temp_suspend_d__") #停牌表
-    fetcher.ensure_data(fetcher.limit_list, "__temp_limit_list__") #涨跌停表
-    fetcher.ensure_data(fetcher.adj_factor, "__temp_adj_factor__") #复权因子表
-    fetcher.ensure_data(fetcher.daily_basic, "__temp_daily_basic__") #每日指标表
-    fetcher.ensure_data(fetcher.moneyflow, "__temp_moneyflow__") #资金流表
-    fetcher.ensure_data_by_q(fetcher.fina_indicator, "__temp_fina_indicator__") #财务指标表
-    fetcher.ensure_data_by_q(fetcher.income, "__temp_income__") #利润表
-    fetcher.ensure_data_by_q(fetcher.balancesheet, "__temp_balancesheet__") #资产负债表
-    fetcher.ensure_data_by_q(fetcher.cashflow, "__temp_cashflow__") #现金流表
+    # fetcher.fetch_meta_data()
+    # fetcher.fetch_trade_day()
+    # fetcher.fetch_month_map()
+    fetcher.ensure_data(fetcher.daily, "__temp_daily__", start_dt, end_dt) #日行情表
+    fetcher.ensure_data(fetcher.suspend_d, "__temp_suspend_d__", start_dt, end_dt) #停牌表
+    fetcher.ensure_data(fetcher.limit_list, "__temp_limit_list__", start_dt, end_dt) #涨跌停表
+    fetcher.ensure_data(fetcher.adj_factor, "__temp_adj_factor__", start_dt, end_dt) #复权因子表
+    fetcher.ensure_data(fetcher.daily_basic, "__temp_daily_basic__", start_dt, end_dt) #每日指标表
+    fetcher.ensure_data(fetcher.moneyflow, "__temp_moneyflow__", start_dt, end_dt) #资金流表
+    fetcher.ensure_data_by_q(fetcher.fina_indicator, "__temp_fina_indicator__", start_dt, end_dt) #财务指标表
+    fetcher.ensure_data_by_q(fetcher.income, "__temp_income__", start_dt, end_dt) #利润表
+    fetcher.ensure_data_by_q(fetcher.balancesheet, "__temp_balancesheet__", start_dt, end_dt) #资产负债表
+    fetcher.ensure_data_by_q(fetcher.cashflow, "__temp_cashflow__", start_dt, end_dt) #现金流表
     fetcher.index_daily()
+    return
     #---------------------------------------------------------------
     # 然后从本地数据生成指标
     #---------------------------------------------------------------
@@ -70,7 +72,7 @@ def TushareFetch():
 #---------------------------------------------------------------
 # Wind数据源
 #---------------------------------------------------------------
-fetcher = WindFetcher()
+# fetcher = WindFetcher()
 
 def profit_ttm_G_m(): #净利润(ttm)同比增长率
     fetcher.create_profit_ttm_G_m()

@@ -1,11 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-阿尔法收割者
-
-Project: alphasickle
-Author: Moses
-E-mail: 8342537@qq.com
-"""
 import os
 import warnings
 import numpy as np
@@ -35,8 +28,8 @@ class lazyproperty:
             return value
 
 class Data:
-    startday = "20090101"
-    endday = "20191231"
+    startday = "20170101"
+    endday = "20220531"
     #endday = pd.tseries.offsets.datetime.now().strftime("%Y%m%d")
     freq = "M"
 
@@ -146,20 +139,20 @@ class Data:
 
     def open_file(self, name):
         if name == 'meta':
-            return pd.read_excel(os.path.join(self.root, 'src', self.metafile), index_col=[0], parse_dates=['ipo_date', "delist_date"], encoding='gbk')
+            return pd.read_excel(os.path.join(self.root, 'src', self.metafile), index_col=[0], parse_dates=['ipo_date', "delist_date"])
         elif name == 'month_map':
-            return pd.read_excel(os.path.join(self.root, 'src', self.mmapfile), index_col=[0], parse_dates=[0, 1], encoding='gbk')['calendar_date']
+            return pd.read_excel(os.path.join(self.root, 'src', self.mmapfile), index_col=[0], parse_dates=[0, 1])['calendar_date']
         elif name == 'trade_days_begin_end_of_month':
-            return pd.read_excel(os.path.join(self.root, 'src', self.tdays_be_m_file), index_col=[1], parse_dates=[0, 1], encoding='gbk')
+            return pd.read_excel(os.path.join(self.root, 'src', self.tdays_be_m_file), index_col=[1], parse_dates=[0, 1])
         elif name == 'month_group':
-            return pd.read_excel(os.path.join(self.root, 'src', self.month_group_file), index_col=[0], parse_dates=True, encoding='gbk')
+            return pd.read_excel(os.path.join(self.root, 'src', self.month_group_file), index_col=[0], parse_dates=True)
         elif name == 'tradedays':
-            return pd.read_excel(os.path.join(self.root, 'src', self.tradedays_file), index_col=[0], parse_dates=True, encoding='gbk').index.tolist()
+            return pd.read_excel(os.path.join(self.root, 'src', self.tradedays_file), index_col=[0], parse_dates=True).index.tolist()
         path = self.freqmap.get(name, None)
         if path is None:
             raise Exception(f'{name} is unrecognisable or not in file dir, please check and retry.')
         try:
-            dat = pd.read_csv(os.path.join(path, name+'.csv'), index_col=[0], engine='python', encoding='gbk')
+            dat = pd.read_csv(os.path.join(path, name+'.csv'), index_col=[0], engine='python')
             dat = pd.DataFrame(data=dat, index=dat.index.union(self.meta.index), columns=dat.columns)
         except TypeError:
             print(name, path)

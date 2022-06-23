@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 import pandas as pd
+import numpy as np
 import tushare as ts
 import pymysql
+import os
 from retrying import retry
 from functools import wraps
 from factor_generate import FactorGenerater
@@ -23,7 +25,6 @@ class RawDataFetcher(FactorGenerater):
         else:
             return date + toffsets.MonthEnd(n=1)
 
-    @retry(stop_max_attempt_number=500, wait_random_min=1000, wait_random_max=2000)
     def ensure_data(self, func, save_dir, start_dt='20010101', end_dt='20201231'):
         """ 确保按交易日获取数据
         """
@@ -43,7 +44,6 @@ class RawDataFetcher(FactorGenerater):
             datdf.to_csv(path, encoding='gbk')
             print(t+".csv write ok !!!!!")
 
-    @retry(stop_max_attempt_number=500, wait_random_min=1000, wait_random_max=2000)
     def ensure_data_by_q(self, func, save_dir, start_dt='20010101', end_dt='20201231'):
         """ 确保按季度获取数据
         """
@@ -305,7 +305,7 @@ class RawDataFetcher(FactorGenerater):
 class TushareFetcher(RawDataFetcher):
 
     def __init__(self):
-        self.pro = ts.pro_api('x')
+        self.pro = ts.pro_api('ddb35fd93977514e815cfcb306c924d9fe4f74473b9d660fa2c05649')
         super().__init__(using_fetch=True)
 
     def fetch_meta_data(self):
