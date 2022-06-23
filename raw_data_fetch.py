@@ -1,30 +1,16 @@
 # -*- coding: utf-8 -*-
-"""
-阿尔法收割者
-
-Project: alphasickle
-Author: Moses
-E-mail: 8342537@qq.com
-"""
-import os
-import numpy as np
 import pandas as pd
 import tushare as ts
 import pymysql
 from retrying import retry
 from functools import wraps
 from factor_generate import FactorGenerater
-try:
-    basestring
-except NameError:
-    basestring = str
 
 #打印能完整显示
 pd.set_option('display.max_columns', None)
 pd.set_option('display.max_rows', None)
 pd.set_option('display.width', 50000)
 pd.set_option('max_colwidth', 1000)
-
 
 class RawDataFetcher(FactorGenerater):
 
