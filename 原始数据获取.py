@@ -1,11 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-阿尔法收割者
-
-Project: alphasickle
-Author: Moses
-E-mail: 8342537@qq.com
-"""
 from joblib import Parallel, delayed
 from raw_data_fetch import TushareFetcher, WindFetcher
 
@@ -232,8 +225,8 @@ def WindFetch():
 
 
 if __name__ == '__main__':
-    WindFetch()
-    #TushareFetch()
+    # WindFetch()
+    TushareFetch()
 
     '''
     path = os.path.dirname(os.path.dirname(__file__))
