@@ -17,8 +17,8 @@ def create_factor_file(date):
 
 def main():
     dates = [d for d in gen.month_map.keys()]
-    s = pd.to_datetime('20120101')
-    e = pd.to_datetime('20191130')
+    s = pd.to_datetime('20170101')
+    e = pd.to_datetime('20220531')
     dates = pd.Series(dates, index=dates)
     dates = dates[(dates>=s)&(dates<=e)]
     #串行

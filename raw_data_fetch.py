@@ -143,14 +143,16 @@ class RawDataFetcher(FactorGenerater):
             del dat['Unnamed: 0']
             panel[d] = dat
             print(d)
-        datpanel = pd.Panel(panel)
-        datpanel = datpanel.to_frame().stack().unstack(level=(0,1)) #貌似某些情况下会有BUG,有索引但是没数据
+        # datpanel = pd.Panel(panel)
+        # datpanel = datpanel.to_frame().stack().unstack(level=(0,1)) #貌似某些情况下会有BUG,有索引但是没数据
+        datpanel = pd.concat(panel, names=['date', 'ts_code'])
+        datpanel = datpanel.swaplevel().sort_index()
         #开始计算结果指标(月频),在每个时间截面逐个处理每只股票
         df = pd.DataFrame(index=all_stocks_info.index, columns=mdays)
         for d in df.columns: #每月最后一天
             for stock in df.index: #每只股票
                 try:
-                    datdf = datpanel[stock]
+                    datdf = datpanel.loc[stock]
                     datdf = datdf.loc[datdf['ann_date']<d] #站在当前时间节点,每只股票所能看到的最近一期财务指标数据(不同股票财报发布时间不一定相同)
                     df.at[stock, d] = datdf.iloc[-1].at[raw_data_field] #取已经发布最近一期财报数据指定字段进行赋值
                     #print(stock)
@@ -203,7 +205,7 @@ class RawDataFetcher(FactorGenerater):
         col_index = sorted(df1.columns.intersection(df2.columns))
         return df1.loc[row_index, col_index], df2.loc[row_index, col_index]
 
-    def create_daily_quote_indicators(self):
+    def create_daily_quote_indicators(self, start_dt, end_dt):
         '''
         '''
         #-------------------------------------------------------------
@@ -247,8 +249,8 @@ class RawDataFetcher(FactorGenerater):
         self.close_file(hfq_close, 'hfq_close')
         #-------------------------------------------------------------
         #生成周期为1,3,6,12月收益率
-        s = pd.to_datetime('20010101') #统计周期开始
-        e = pd.to_datetime('20201231') #统计周期结束
+        s = pd.to_datetime(start_dt) #统计周期开始
+        e = pd.to_datetime(end_dt) #统计周期结束
         tdays_be_month = self.trade_days_begin_end_of_month
         tdays_be_month = tdays_be_month[(tdays_be_month>=s)&(tdays_be_month<=e)].dropna(how='all')
         months_end = tdays_be_month.index
@@ -665,7 +667,9 @@ class TushareFetcher(RawDataFetcher):
         for f in os.listdir(tmp_dir):
             tday = pd.to_datetime(f.split(".")[0])
             dat = pd.read_csv(os.path.join(tmp_dir, f), index_col=[1], engine='python', encoding='gbk')
-            df.loc[dat.index, tday] = 0 #停牌的设置为0
+            # df.loc[dat.index, tday] = 0 #停牌的设置为0
+            # 修改为与meta数据中存在的股票，即取交集
+            df.loc[dat.index.intersection(all_stocks_info), tday] = 0 #停牌的设置为0
             print(tday)
         self.close_file(df, "trade_status")
 
@@ -700,12 +704,12 @@ class TushareFetcher(RawDataFetcher):
         turn = self.preprocess(turn, suspend_days_process=True)
         self.close_file(turn, "turn")
 
-    def create_mkt_cap_float_m(self):
+    def create_mkt_cap_float_m(self, start_dt='20090101', end_dt='20211231'):
         ''' 通过日频数据创建月频指标(可统一为单个函数)
         '''
         tmp_dir = os.path.join(self.root, "__temp_daily_basic__")
-        s = pd.to_datetime('20090101')
-        e = pd.to_datetime('20191231')
+        s = pd.to_datetime(start_dt)
+        e = pd.to_datetime(end_dt)
         new_tdays = self._get_trade_days(s, e, "M")
         new_caldays = [self._get_month_end(tdate) for tdate in new_tdays]
         all_stocks_info = self.meta
@@ -719,12 +723,12 @@ class TushareFetcher(RawDataFetcher):
         df = df.dropna(how='all') #删掉全为空的一行
         self.close_file(df, "mkt_cap_float_m")
 
-    def create_pe_ttm_m(self):
+    def create_pe_ttm_m(self, start_dt='20090101', end_dt='20211231'):
         ''' 通过日频数据创建月频指标(可统一为单个函数)
         '''
         tmp_dir = os.path.join(self.root, "__temp_daily_basic__")
-        s = pd.to_datetime('20090101')
-        e = pd.to_datetime('20191231')
+        s = pd.to_datetime(start_dt)
+        e = pd.to_datetime(end_dt)
         new_tdays = self._get_trade_days(s, e, "M")
         new_caldays = [self._get_month_end(tdate) for tdate in new_tdays]
         all_stocks_info = self.meta
@@ -738,12 +742,12 @@ class TushareFetcher(RawDataFetcher):
         df = df.dropna(how='all') #删掉全为空的一行
         self.close_file(df, "pe_ttm_m")
 
-    def create_val_pe_deducted_ttm_m(self):
+    def create_val_pe_deducted_ttm_m(self, start_dt='20090101', end_dt='20211231'):
         ''' 通过日频数据创建月频指标(可统一为单个函数)
         '''
         tmp_dir = os.path.join(self.root, "__temp_daily_basic__")
-        s = pd.to_datetime('20090101')
-        e = pd.to_datetime('20191231')
+        s = pd.to_datetime(start_dt)
+        e = pd.to_datetime(end_dt)
         new_tdays = self._get_trade_days(s, e, "M")
         new_caldays = [self._get_month_end(tdate) for tdate in new_tdays]
         all_stocks_info = self.meta
@@ -757,12 +761,12 @@ class TushareFetcher(RawDataFetcher):
         df = df.dropna(how='all') #删掉全为空的一行
         self.close_file(df, "val_pe_deducted_ttm_m")
 
-    def create_pb_lf_m(self):
+    def create_pb_lf_m(self, start_dt='20090101', end_dt='20211231'):
         ''' 通过日频数据创建月频指标(可统一为单个函数)
         '''
         tmp_dir = os.path.join(self.root, "__temp_daily_basic__")
-        s = pd.to_datetime('20090101')
-        e = pd.to_datetime('20191231')
+        s = pd.to_datetime(start_dt)
+        e = pd.to_datetime(end_dt)
         new_tdays = self._get_trade_days(s, e, "M")
         new_caldays = [self._get_month_end(tdate) for tdate in new_tdays]
         all_stocks_info = self.meta
@@ -776,12 +780,12 @@ class TushareFetcher(RawDataFetcher):
         df = df.dropna(how='all') #删掉全为空的一行
         self.close_file(df, "pb_lf_m")
 
-    def create_ps_ttm_m(self):
+    def create_ps_ttm_m(self, start_dt='20090101', end_dt='20211231'):
         ''' 通过日频数据创建月频指标(可统一为单个函数)
         '''
         tmp_dir = os.path.join(self.root, "__temp_daily_basic__")
-        s = pd.to_datetime('20090101')
-        e = pd.to_datetime('20191231')
+        s = pd.to_datetime(start_dt)
+        e = pd.to_datetime(end_dt)
         new_tdays = self._get_trade_days(s, e, "M")
         new_caldays = [self._get_month_end(tdate) for tdate in new_tdays]
         all_stocks_info = self.meta
@@ -795,9 +799,9 @@ class TushareFetcher(RawDataFetcher):
         df = df.dropna(how='all') #删掉全为空的一行
         self.close_file(df, "ps_ttm_m")
 
-    def create_pcf_ncf_ttm_m(self):
-        s = pd.to_datetime('20090101') #统计周期开始
-        e = pd.to_datetime('20191231') #统计周期结束
+    def create_pcf_ncf_ttm_m(self, start_dt='20090101', end_dt='20211231'):
+        s = pd.to_datetime(start_dt) #统计周期开始
+        e = pd.to_datetime(end_dt) #统计周期结束
         new_tdays = self._get_trade_days(s, e, "M") #每月最后一个交易日
         new_caldays = [self._get_month_end(tdate) for tdate in new_tdays] #每月最后一天(每月最后一个日历日)
         all_stocks_info = self.meta
@@ -812,7 +816,7 @@ class TushareFetcher(RawDataFetcher):
             df_total_mv[caldate] = dat["total_mv"]
             print(caldate)
         #df_total_mv = df_total_mv.dropna(how='all') #删掉全为空的一行
-        print(df_total_mv) #总市值指标ok
+        print(df_total_mv.shape) #总市值指标ok
         #-------------------------------------------------------
         #现金增加额指标(季频)
         tmp_dir = os.path.join(self.root, "__temp_cashflow__") #现金流量表
@@ -841,12 +845,14 @@ class TushareFetcher(RawDataFetcher):
             df_cfps[qday] = dat["n_incr_cash_cash_equ"] #现金及现金等价物净增加额
             df_ann_date[qday] = dat["ann_date"] #财报发布日期
             print(qday)
-        print(df_cfps) #现金增加额指标ok
+        print(df_cfps.shape) #现金增加额指标ok
         #df_cfps = df_cfps.dropna(how='all') #删掉全为空的一行
         #-------------------------------------------------------
         #现金增加额指标可能有空值,利用线性插值补全(这步可以不做)
         df_cfps_t = df_cfps.T #把时间变成索引,股票变成列名
         def _w(ser):
+            if (ser.size < 4): # 不满一年的不变
+                return
             if pd.isnull(ser[3]): #一年内如果第四季度(年报)指标值为空,那么整年四个季度都设置为空
                 ser.iloc[:] = np.nan
             elif any(pd.isnull(ser)): #1~3季度如果存在空值,就利用线性插值补全
@@ -854,6 +860,7 @@ class TushareFetcher(RawDataFetcher):
                     ser[0] = ser[3]/4 #第一季度如果为空,就用全年的均值进行填充
                 ser = ser.interpolate()
             df_cfps_t.loc[ser.index, ser.name] = ser #回填
+        print(df_cfps_t.index)
         df_cfps_t.resample('A').apply(_w) #按年分组处理
         df_cfps = df_cfps_t.T #变回来:股票为索引,日期为列名
         #-------------------------------------------------------
@@ -885,11 +892,11 @@ class TushareFetcher(RawDataFetcher):
         df_result = df_result.dropna(how='all') #删掉全为空的一行
         self.close_file(df_result, "pcf_ncf_ttm_m")
 
-    def create_pcf_ocf_ttm_m(self):
+    def create_pcf_ocf_ttm_m(self, start_dt='20090101', end_dt='20211231'):
         ''' 本函数与上面的create_pcf_ncf_ttm_m类似,逻辑更优化
         '''
-        s = pd.to_datetime('20090101') #统计周期开始
-        e = pd.to_datetime('20191231') #统计周期结束
+        s = pd.to_datetime(start_dt) #统计周期开始
+        e = pd.to_datetime(end_dt) #统计周期结束
         new_tdays = self._get_trade_days(s, e, "M") #每月最后一个交易日
         new_caldays = [self._get_month_end(tdate) for tdate in new_tdays] #每月最后一天(每月最后一个日历日)
         all_stocks_info = self.meta
@@ -917,9 +924,11 @@ class TushareFetcher(RawDataFetcher):
             del dat['Unnamed: 0']
             panel[d] = dat
             print(d)
-        panel = pd.Panel(panel)
-        panel = panel.to_frame()
-        panel = panel.stack().unstack(level=(0,1))
+        # panel = pd.Panel(panel)
+        # panel = panel.to_frame()
+        # panel = panel.stack().unstack(level=(0,1))
+        panel = pd.concat(panel, names=['date', 'ts_code'])
+        panel = panel.swaplevel().sort_index()
         #-------------------------------------------------------
         #开始计算结果指标(月频)
         df_result = pd.DataFrame(index=all_stocks_info.index, columns=new_caldays)
@@ -933,7 +942,8 @@ class TushareFetcher(RawDataFetcher):
         for calday in df_result.columns: #每月最后一天
             for stock in df_result.index: #每只股票
                 try:
-                    datdf = panel[stock]
+                    # datdf = panel[stock]
+                    datdf = panel.loc[stock]
                     datdf = datdf.loc[datdf['ann_date']<calday] #在那个历史节点,只能使用已经发布的财报,防止使用未来数据
                     d = datdf.iloc[-1].name #已经发布的财报里面最近一期的时间(某季度最后一天)
                     if d.quarter == 4: #最近一期财报是年报(第4季度)
@@ -951,12 +961,12 @@ class TushareFetcher(RawDataFetcher):
         df_result = df_result.dropna(how='all') #删掉全为空的一行
         self.close_file(df_result, "pcf_ocf_ttm_m")
 
-    def create_dividendyield2_m(self):
+    def create_dividendyield2_m(self, start_dt='20090101', end_dt='20211231'):
         ''' 通过日频数据创建月频指标(可统一为单个函数)
         '''
         tmp_dir = os.path.join(self.root, "__temp_daily_basic__")
-        s = pd.to_datetime('20090101')
-        e = pd.to_datetime('20191231')
+        s = pd.to_datetime(start_dt)
+        e = pd.to_datetime(end_dt)
         new_tdays = self._get_trade_days(s, e, "M")
         new_caldays = [self._get_month_end(tdate) for tdate in new_tdays]
         all_stocks_info = self.meta
@@ -970,11 +980,11 @@ class TushareFetcher(RawDataFetcher):
         df = df.dropna(how='all') #删掉全为空的一行
         self.close_file(df, "dividendyield2_m")
 
-    def create_profit_ttm_G_m(self):
+    def create_profit_ttm_G_m(self, start_dt='20090101', end_dt='20211231'):
         ''' 通过季频数据创建月频指标,可以直接用create_indicator_m_by_q代替
         '''
-        s = pd.to_datetime('20090101') #统计周期开始
-        e = pd.to_datetime('20191231') #统计周期结束
+        s = pd.to_datetime(start_dt) #统计周期开始
+        e = pd.to_datetime(end_dt) #统计周期结束
         qdays = pd.date_range(start=s, end=e, freq="Q") #每个季度最后一天
         mdays = pd.date_range(start=s, end=e, freq="M") #每个月最后一天
         all_stocks_info = self.meta
@@ -989,8 +999,10 @@ class TushareFetcher(RawDataFetcher):
             del dat['Unnamed: 0']
             panel[d] = dat
             print(d)
-        panel = pd.Panel(panel)
-        panel = panel.to_frame()
+        # panel = pd.Panel(panel)
+        # panel = panel.to_frame()
+        panel = pd.concat(panel, names=['date', 'ts_code'])
+        panel = panel.swaplevel().sort_index()
         '''
                                              2009-03-31           2009-06-30           2009-09-30           2009-12-31           2010-03-31           2010-06-30           2010-09-30           2010-12-31           2011-03-31           2011-06-30           2011-09-30           2011-12-31           2012-03-31           2012-06-30           2012-09-30           2012-12-31           2013-03-31           2013-06-30           2013-09-30           2013-12-31           2014-03-31           2014-06-30           2014-09-30           2014-12-31           2015-03-31           2015-06-30           2015-09-30           2015-12-31           2016-03-31           2016-06-30           2016-09-30           2016-12-31           2017-03-31           2017-06-30           2017-09-30           2017-12-31           2018-03-31           2018-06-30           2018-09-30           2018-12-31           2019-03-31           2019-06-30           2019-09-30           2019-12-31
 major     minor                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       
@@ -1006,7 +1018,7 @@ major     minor
           extra_item                  1.897e+06            5.014e+06           1.5264e+07           9.1158e+07            1.519e+06           5.6565e+07           7.8095e+07          1.40079e+08            7.155e+06           1.3668e+07           8.3286e+07           9.9359e+07            8.733e+06           3.2224e+07           5.0513e+07           1.7481e+07                1e+06                9e+06              5.9e+07              6.5e+07             -1.1e+07             -1.3e+07             -1.7e+07             -3.9e+07               -8e+06               -6e+06             -1.4e+07             -3.7e+07              1.1e+07               -2e+06              1.2e+07               -7e+06                2e+06              4.2e+07              2.3e+07              2.7e+07                4e+07              4.6e+07             1.09e+08             1.18e+08              2.4e+07              8.7e+07              9.4e+07             1.09e+08
         '''
         #print(panel.iloc[:10,:100])
-        panel = panel.stack().unstack(level=(0,1))
+        # panel = panel.stack().unstack(level=(0,1))
         '''
         major                 000001.SZ                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      000002.SZ                                                                               
 minor                  ann_date             end_date   eps dt_eps total_revenue_ps revenue_ps capital_rese_ps surplus_rese_ps undist_profit_ps   extra_item  profit_dedt assets_turn    op_income valuechange_income retained_earnings diluted2_eps      bps  ocfps retainedps    cfps netprofit_margin profit_to_gr adminexp_of_gr op_of_gr      roe   roe_dt    npta roe_yearly opincome_of_ebt investincome_of_ebt n_op_profit_of_ebt tax_to_ebt dtprofit_to_profit ocf_to_or ocf_to_opincome debt_to_assets assets_to_eqt dp_assets_to_eqt debt_to_eqt eqt_to_debt ocf_to_debt roa_yearly  roa_dp fixed_assets non_op_profit op_to_ebt nop_to_ebt ocf_to_profit op_to_debt total_fa_trun profit_to_op   q_opincome q_investincome   q_dtprofit   q_eps q_netprofit_margin q_profit_to_gr q_adminexp_to_gr q_op_to_gr   q_roe q_dt_roe  q_npta q_opincome_to_ebt q_investincome_to_ebt q_dtprofit_to_profit q_ocf_to_sales q_ocf_to_or basic_eps_yoy dt_eps_yoy cfps_yoy   op_yoy  ebt_yoy netprofit_yoy dt_netprofit_yoy  ocf_yoy  roe_yoy bps_yoy assets_yoy  eqt_yoy   tr_yoy   or_yoy q_gr_yoy q_gr_qoq q_sales_yoy q_sales_qoq q_op_yoy q_op_qoq q_profit_yoy q_profit_qoq q_netprofit_yoy q_netprofit_qoq equity_yoy update_flag             ann_date             end_date    eps dt_eps total_revenue_ps revenue_ps capital_rese_ps
@@ -1028,7 +1040,8 @@ minor                  ann_date             end_date   eps dt_eps total_revenue_
             #站在当前时间节点,每只股票所能看到的最近一期财务指标数据(不同股票财报发布时间不一定相同)
             for stock in df.index: #每只股票
                 try:
-                    datdf = panel[stock]
+                    # datdf = panel[stock]
+                    datdf = panel.loc[stock]
                     datdf = datdf.loc[datdf['ann_date']<d]
                     df.at[stock, d] = datdf.iloc[-1].at['q_profit_yoy']
                 except:
