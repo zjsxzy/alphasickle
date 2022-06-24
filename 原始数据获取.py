@@ -6,7 +6,7 @@ from raw_data_fetch import TushareFetcher, WindFetcher
 # Tushare数据源
 #---------------------------------------------------------------
 def TushareFetch():
-    start_dt, end_dt = '20170101', '20220531'
+    start_dt, end_dt = '20210101', '20211231'
     fetcher = TushareFetcher()
     #---------------------------------------------------------------
     # 先下载数据到本地
@@ -28,22 +28,22 @@ def TushareFetch():
     #---------------------------------------------------------------
     # 然后从本地数据生成指标
     #---------------------------------------------------------------
-    # fetcher.create_listday_matrix()
-    # fetcher.create_month_tdays_begin_end()
-    # fetcher.create_trade_status()
-    # fetcher.create_turn_d()
-    # fetcher.create_maxupordown()
-    # fetcher.create_indicator("__temp_adj_factor__", "adj_factor", "adjfactor")
-    # fetcher.create_mkt_cap_float_m(start_dt, end_dt)
-    # fetcher.create_pe_ttm_m(start_dt, end_dt)
-    # fetcher.create_val_pe_deducted_ttm_m(start_dt, end_dt)
-    # fetcher.create_pb_lf_m(start_dt, end_dt)
-    # fetcher.create_ps_ttm_m(start_dt, end_dt)
-    # fetcher.create_pcf_ncf_ttm_m(start_dt, end_dt)
-    # fetcher.create_pcf_ocf_ttm_m(start_dt, end_dt)
-    # fetcher.create_dividendyield2_m(start_dt, end_dt)
-    # fetcher.create_profit_ttm_G_m(start_dt, end_dt)
-    # fetcher.create_indicator_m_by_q("__temp_fina_indicator__", "q_sales_yoy", "qfa_yoysales_m", start_dt, end_dt)
+    fetcher.create_listday_matrix()
+    fetcher.create_month_tdays_begin_end()
+    fetcher.create_trade_status()
+    fetcher.create_turn_d()
+    fetcher.create_maxupordown()
+    fetcher.create_indicator("__temp_adj_factor__", "adj_factor", "adjfactor")
+    fetcher.create_mkt_cap_float_m(start_dt, end_dt)
+    fetcher.create_pe_ttm_m(start_dt, end_dt)
+    fetcher.create_val_pe_deducted_ttm_m(start_dt, end_dt)
+    fetcher.create_pb_lf_m(start_dt, end_dt)
+    fetcher.create_ps_ttm_m(start_dt, end_dt)
+    fetcher.create_pcf_ncf_ttm_m(start_dt, end_dt)
+    fetcher.create_pcf_ocf_ttm_m(start_dt, end_dt)
+    fetcher.create_dividendyield2_m(start_dt, end_dt)
+    fetcher.create_profit_ttm_G_m(start_dt, end_dt)
+    fetcher.create_indicator_m_by_q("__temp_fina_indicator__", "q_sales_yoy", "qfa_yoysales_m", start_dt, end_dt)
     fetcher.create_indicator_m_by_q("__temp_fina_indicator__", "q_profit_yoy", "qfa_yoyprofit_m", start_dt, end_dt)
     fetcher.create_indicator_m_by_q("__temp_fina_indicator__", "ocf_yoy", "qfa_yoyocf_m", start_dt, end_dt) #临时替代
     fetcher.create_indicator_m_by_q("__temp_fina_indicator__", "roe_yoy", "qfa_roe_G_m", start_dt, end_dt) #临时替代
