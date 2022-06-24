@@ -43,8 +43,7 @@ def TushareFetch():
     # fetcher.create_pcf_ocf_ttm_m(start_dt, end_dt)
     # fetcher.create_dividendyield2_m(start_dt, end_dt)
     # fetcher.create_profit_ttm_G_m(start_dt, end_dt)
-    fetcher.create_indicator_m_by_q("__temp_fina_indicator__", "q_sales_yoy", "qfa_yoysales_m", start_dt, end_dt)
-    return
+    # fetcher.create_indicator_m_by_q("__temp_fina_indicator__", "q_sales_yoy", "qfa_yoysales_m", start_dt, end_dt)
     fetcher.create_indicator_m_by_q("__temp_fina_indicator__", "q_profit_yoy", "qfa_yoyprofit_m", start_dt, end_dt)
     fetcher.create_indicator_m_by_q("__temp_fina_indicator__", "ocf_yoy", "qfa_yoyocf_m", start_dt, end_dt) #临时替代
     fetcher.create_indicator_m_by_q("__temp_fina_indicator__", "roe_yoy", "qfa_roe_G_m", start_dt, end_dt) #临时替代
