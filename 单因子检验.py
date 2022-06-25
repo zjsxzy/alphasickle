@@ -13,6 +13,7 @@ factor_path = os.path.join(work_dir, '因子预处理模块', '因子（已预�
 sf_test_save_path = os.path.join(work_dir, '单因子检验')
 
 def main():
+    start_date, end_date = '20120101', '20211231'
     factors = input("请输入待进行检验的因子（以,分隔），'a'为全部因子：")
     if factors == 'a':
         factors = get_factor_names()
@@ -20,7 +21,7 @@ def main():
         factors = factors.split(',')
 
     single_factor_test(factors)
-    layer_division_backtest(factors)
+    layer_division_backtest(factors, start_date, end_date)
 
 if __name__ == '__main__':
     main()

@@ -143,7 +143,6 @@ def get_test_result(factors, datpanel):
     res = pd.DataFrame()
     ts_all, frets_all, ics_all = pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
     for factor_name in factors: #每次检验一个因子
-        print(factor_name)
         cur_fac_res, ts, frets, ics = t_ic_test(datpanel, factor_name) #对单个因子用一年的数据进行检验
         col_name = factor_name.replace('/', '_div_') if '/' in factor_name else factor_name
 
@@ -177,7 +176,6 @@ def test_yearly(factors=None, start_year=2011, end_year=2021):
     test_result = {}
     ts_all, frets_all, ics_all = pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
     for year in years: #按年进行检验(月频每年12个截面文件)
-        print(year)
         datpanel = get_datdf_in_year(year) #读取一年的所有截面文件内容到内存
         if factors is None:
             factors = get_factor_names() #如果输入的因子名称列表为空, 就从某文件读取要处理的因子名称列表
@@ -625,6 +623,8 @@ class SingleFactorLayerDivisionBacktest:
     def _run_rapid_layer_divbt(self):
         result = pd.DataFrame()
         for date in self.pctchg_nm.columns: #按月计算每组收益率
+            if self.factor_data[date].isnull().all():
+                continue
             cur_weights = self.get_stock_weight_by_group(self.factor_data[date], True) #输入:某因子在某时间点截面上所有股票上的暴露
             '''
             cur_weights 输出类似如下:
@@ -756,6 +756,7 @@ def panel_to_matrix(factors, factor_path=factor_path, save_path=sf_test_save_pat
     for factor in datpanel.columns:
         # dat = datpanel.loc[factor]
         dat = datpanel[factor].unstack(level=0)
+        dat = dat.reindex(sorted(dat.columns), axis=1) # 按时间排序
         save_name = factor.replace('/', '_div_') if '/' in factor else factor
         dat.to_csv(os.path.join(factor_matrix_path, save_name+'.csv'), encoding='gbk')
 
@@ -833,6 +834,7 @@ def plot_group_diff_plot(records, fname, concise):
 
     fig, ax = plt.subplots(1, 1)
     ax.plot(time, records.values)
+    ax.tick_params(axis='x', labelrotation=30)
     ax.xaxis.set_major_locator(ticker.MultipleLocator(tick_spacing1))
     ax.set_title(fname)
 
@@ -845,13 +847,13 @@ def single_factor_test(factors):
     print("\n开始进行T检验和IC检验...")
     test_yearly(factors)   #T检验&IC检验
     print(f"检验完毕！结果见目录：{sf_test_save_path}")
-    print('*'*80)
+    # print('*'*80)
 
-def layer_division_backtest(factors):
+def layer_division_backtest(factors, start_date, end_date):
     global sf_test_save_path
     from index_enhance import get_factor
-    start_date='2012-01-30' #月频简化回测用不上
-    end_date='2019-12-31' #月频简化回测用不上
+    # start_date='2012-01-30' #月频简化回测用不上
+    # end_date='2019-12-31' #月频简化回测用不上
     if_concise = True   #是否进行月频简化回测
     factor_matrix_path = os.path.join(sf_test_save_path, '因子矩阵')
 
@@ -885,4 +887,4 @@ def layer_division_backtest(factors):
         plot_group_diff_plot(records, fname, if_concise)       #绘制组1-组5净值图
 
     print(f"分层回测结束！结果见目录：{sf_test_save_path}")
-    print('*'*80)
+    # print('*'*80)
