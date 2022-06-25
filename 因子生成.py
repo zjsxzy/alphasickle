@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
 import pandas as pd
-from joblib import Parallel, delayed
+# from joblib import Parallel, delayed
 from factor_generate import FactorGenerater, FileAlreadyExistError, WORK_PATH
 
 gen = FactorGenerater()
@@ -17,16 +17,17 @@ def create_factor_file(date):
 
 def main():
     dates = [d for d in gen.month_map.keys()]
-    s = pd.to_datetime('20170101')
-    e = pd.to_datetime('20220531')
+    s = pd.to_datetime('20100101')
+    e = pd.to_datetime('20211231')
     dates = pd.Series(dates, index=dates)
     dates = dates[(dates>=s)&(dates<=e)]
     #串行
-    #for date in dates:
-    #    create_factor_file(date)
+    for date in dates:
+        print(date)
+        create_factor_file(date)
     #并行
-    function_list = [delayed(create_factor_file)(date) for date in dates]
-    Parallel(n_jobs=5, backend='multiprocessing')(function_list) #并行化处理
+    # function_list = [delayed(create_factor_file)(date) for date in dates]
+    # Parallel(n_jobs=5, backend='multiprocessing')(function_list) #并行化处理
 
 if __name__ == '__main__':
     main()

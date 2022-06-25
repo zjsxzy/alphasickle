@@ -20,7 +20,7 @@ factor_path = os.path.join(work_dir, '因子预处理模块', '因子（已预�
 #测试结果图表存放目录（如无则自动生成）
 sf_test_save_path = os.path.join(work_dir, '单因子检验')
 
-industry_benchmark = 'zx'     #行业基准-中信一级行业
+industry_benchmark = 'sw1'     #行业基准-中信一级行业
 
 plt.rcParams['font.sans-serif'] = ['SimHei']    #正常显示中文标签
 plt.rcParams['axes.unicode_minus'] = False      #正常显示负号
@@ -31,7 +31,7 @@ tick_spacing1 = 9                               #设置画图的横轴密度
 
 def get_factor_names():
     global work_dir
-    factor_info = pd.read_excel(os.path.join(work_dir, '待检验因子列表.xlsx'), encoding='gbk', sheetname=0, index_col=[0])
+    factor_info = pd.read_excel(os.path.join(work_dir, '待检验因子列表.xlsx'))
     return factor_info['因子名称'].values.tolist()
 
 def regress(y, X, w=1, intercept=False):
@@ -143,6 +143,7 @@ def get_test_result(factors, datpanel):
     res = pd.DataFrame()
     ts_all, frets_all, ics_all = pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
     for factor_name in factors: #每次检验一个因子
+        print(factor_name)
         cur_fac_res, ts, frets, ics = t_ic_test(datpanel, factor_name) #对单个因子用一年的数据进行检验
         col_name = factor_name.replace('/', '_div_') if '/' in factor_name else factor_name
 
@@ -161,7 +162,7 @@ def get_test_result(factors, datpanel):
     ics_all = ics_all.sort_index()
     return res, ts_all, frets_all, ics_all
 
-def test_yearly(factors=None, start_year=2012, end_year=2019):
+def test_yearly(factors=None, start_year=2011, end_year=2021):
     ''' 按年进行检验
     有个细节须注意,举例说明:比如对2015-1月到2016-12月共两年一共24个月的截面文件进行检验操作,
     得到的因子收益率和ic值等实际是2015-2月到2017-1月的,分年来看的话2015年实际包含的内容是从2015-2月到2016-1月,
@@ -176,6 +177,7 @@ def test_yearly(factors=None, start_year=2012, end_year=2019):
     test_result = {}
     ts_all, frets_all, ics_all = pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
     for year in years: #按年进行检验(月频每年12个截面文件)
+        print(year)
         datpanel = get_datdf_in_year(year) #读取一年的所有截面文件内容到内存
         if factors is None:
             factors = get_factor_names() #如果输入的因子名称列表为空, 就从某文件读取要处理的因子名称列表
@@ -191,9 +193,10 @@ def test_yearly(factors=None, start_year=2012, end_year=2019):
         df.to_csv(os.path.join(sf_test_save_path, save_name+'.csv'), encoding='gbk')
 
     #存储检验结果表格
-    test_result = pd.Panel(test_result)
-    test_result = test_result.swapaxes(2, 0)
-    test_result = test_result.swapaxes(1, 2)
+    test_result = pd.concat(test_result)
+    # test_result = pd.Panel(test_result)
+    # test_result = test_result.swapaxes(2, 0)
+    # test_result = test_result.swapaxes(1, 2)
     test_result.to_excel(os.path.join(sf_test_save_path, 'T检验&IC检验结果.xlsx'), encoding='gbk')
 
     #绘制单因子检验图，并进行存储
@@ -474,7 +477,8 @@ class Backtest_stock:
         if start_date is None and end_date is None:
             start_date = self.portfolio_record.index[0]
             end_date = self.portfolio_record.index[-1]
-        days = (end_date - start_date) / toffsets.timedelta(1)
+        # days = (end_date - start_date) / toffsets.timedelta(1)
+        days = (end_date - start_date).days
         if freq == 'y':
             return days / 365
         elif freq == 'q':
@@ -734,18 +738,24 @@ def panel_to_matrix(factors, factor_path=factor_path, save_path=sf_test_save_pat
 
     factors = sorted(f.replace('_div_', '/') for f in factors)
     if '预处理' in factor_path:
-        factors.extend(['PCT_CHG_NM', f'industry_{industry_benchmark}', 'MKT_CAP_FLOAT'])
+        # factors.extend(['PCT_CHG_NM', f'industry_{industry_benchmark}', 'MKT_CAP_FLOAT'])
+        factors.extend(['PCT_CHG_NM', 'industry_sw1', 'MKT_CAP_FLOAT'])
     datpanel = {}
     for f in os.listdir(factor_path):
+        if not f.endswith('.csv'):
+            continue
         open_name = f.replace('_div_', '/')
         datdf = pd.read_csv(os.path.join(factor_path, open_name), encoding='gbk', index_col=['code'], engine='python')
         date = pd.to_datetime(f.split('.')[0])
         datpanel[date] = datdf[factors]
 
-    datpanel = pd.Panel(datpanel)
-    datpanel = datpanel.swapaxes(0, 2)
-    for factor in datpanel.items:
-        dat = datpanel.loc[factor]
+    # datpanel = pd.Panel(datpanel)
+    # datpanel = datpanel.swapaxes(0, 2)
+    datpanel = pd.concat(datpanel, names=['date', 'code'])
+    # for factor in datpanel.items:
+    for factor in datpanel.columns:
+        # dat = datpanel.loc[factor]
+        dat = datpanel[factor].unstack(level=0)
         save_name = factor.replace('/', '_div_') if '/' in factor else factor
         dat.to_csv(os.path.join(factor_matrix_path, save_name+'.csv'), encoding='gbk')
 

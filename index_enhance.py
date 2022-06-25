@@ -33,7 +33,8 @@ rm_save_path = os.path.join(work_dir, '收益模型')
 #测试结果图表存放目录（如无则自动生成）
 index_enhance_dir = os.path.join(work_dir, '指数增强模型')
 
-industry_benchmark = 'zx'      #中信一级行业
+# industry_benchmark = 'zx'      #中信一级行业
+industry_benchmark = 'sw1'      #申万一级行业
 
 #自动生成合成、正交因子存放目录
 if not os.path.exists(rm_save_path):
@@ -48,11 +49,12 @@ def get_stock_wt_in_index(index):
     """
     获取指数（000300.SH或000905.SH）中各截面期成分股所占权重
     """
-    global factor_generater
+    # global factor_generater
     if index.startswith('000300') or index.startswith('399300'):
-        index_wt = factor_generater.hs300_wt
-    elif index.startswith('000905') or index.startswith('399905'):
-        index_wt = factor_generater.zz500_wt
+        index_wt = pd.read_csv('%s/raw_data/src/hs300_wt.csv'%(work_dir), index_col=0)
+        # index_wt = factor_generater.hs300_wt
+    # elif index.startswith('000905') or index.startswith('399905'):
+        # index_wt = factor_generater.zz500_wt
     else:
         msg = f'暂不支持当前指数：{index}'
         raise Exception(msg)
@@ -673,7 +675,7 @@ def index_enhance_model(method='l', benchmark='000300.SH', start_date=None, end_
         limit_fac_data = concat_factors_panel(risk_factors, risk_fac_data, mut_codes, ind=True, mktcap=False) #矩阵转换成截面,同时加入行业伪变量
         data_dict.update({'limit_fac_data': limit_fac_data}) #优化函数的约束条件
     elif method == 's':
-        risk_fac_data = {fac: get_factor([fac], mut_codes)[fac] for fac in ['industry_zx', 'MKT_CAP_FLOAT']}
+        risk_fac_data = {fac: get_factor([fac], mut_codes)[fac] for fac in ['industry_sw1', 'MKT_CAP_FLOAT']}
         data_dict.update(risk_fac_data)
 
     #将alpha因子整理为截面形式

@@ -20,7 +20,8 @@ plt.rcParams['font.size'] = 15                #字体大小
 #industry_zx - 中信一级行业；industry_sw - 申万一级行业；
 #MKT_CAP_FLOAT - 流通市值；is_open1 - 当日是否开盘；
 #PCT_CHG_NM - 下个月的月收益率
-info_cols = ['code', 'name', 'ipo_date', 'industry_zx', 'industry_sw', 'MKT_CAP_FLOAT', 'is_open1', 'PCT_CHG_NM']
+# info_cols = ['code', 'name', 'ipo_date', 'industry_zx', 'industry_sw', 'MKT_CAP_FLOAT', 'is_open1', 'PCT_CHG_NM']
+info_cols = ['code', 'name', 'ipo_date', 'industry_sw1', 'MKT_CAP_FLOAT', 'is_open1', 'PCT_CHG_NM']
 
 work_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), '因子预处理模块')
 file_path = os.path.join(work_dir, '因子（原始）') #原始因子数据所在目录
@@ -30,7 +31,7 @@ quality_path = os.path.join(work_dir, '因子数据品质检验')
 matrix_path = os.path.join(work_dir, '矩阵数据')
 inscmp_path = os.path.join(work_dir, '因子行业比较')
 
-industry_benchmark = 'zx' #行业基准（用于缺失值填充和中性化）
+industry_benchmark = 'sw1' #行业基准（用于缺失值填充和中性化）
                           #zx - 中信； sw - 申万
 
 def get_factor_data(datdf, names=None):
@@ -144,6 +145,7 @@ def neutralize(data, ind='zx'):
     cols_neu = y.columns
     lncap = np.log(datdf[['MKT_CAP_FLOAT']])
     ind_dummy_matrix = pd.get_dummies(datdf[f'industry_{ind}'])
+    # ind_dummy_matrix = pd.get_dummies(datdf[f'industry'])
     X = pd.concat([lncap, ind_dummy_matrix], axis=1)
     model = LinearRegression(fit_intercept=False)
     res = model.fit(X, y)
@@ -186,7 +188,7 @@ def plot_factor_data(show_path, sub_type, name, datdf):
         sns.distplot(datdf[factor].fillna(0).values)
         plt.title(factor)
     plt.suptitle(f'{sub_type}-{name}')
-    plt.savefig(f'{save_path}\\{name}.png')
+    plt.savefig(f'{save_path}/{name}.png')
     #plt.cla() #清除axes,即当前figure中的活动的axes,但其他axes保持不变
     #plt.clf() #清除当前figure的所有axes,但是不关闭这个window,所以能继续复用于其他的plot
     plt.close('all') #关闭window,如果没有指定,则指当前window
@@ -198,9 +200,11 @@ def factor_data_quality_check(factors_path, factor_names, save_path, sub_dir_nam
     df_null_stat = None
     df_zero_stat = None
     l = os.listdir(factors_path)[:]
-    index = [pd.to_datetime(f[:10]) for f in l]
+    index = [pd.to_datetime(f[:10]) for f in l if f.endswith('.csv')]
     l_usable_factor_stat = []
     for f in l:
+        if not f.endswith('.csv'):
+            continue
         dt = pd.to_datetime(f[:10])
         data = pd.read_csv(os.path.join(factors_path, f), engine='python', encoding='gbk', index_col=[0])
         datdf, _ = get_factor_data(data, factor_names)
@@ -239,11 +243,19 @@ def process_cross_section(fpath, factor_names=None, visualized=False):
     （因输入的截面数据中所含财务类因子默认已经
     财务日期对齐处理，故在此不再进行该步处理）
     """
+    if not fpath.endswith('.csv'):
+        return
     global file_path, save_path, visu_path, industry_benchmark
     #读取原始因子截面数据
     data = pd.read_csv(os.path.join(file_path, fpath), engine='python', encoding='gbk', index_col=[0])
+    if data.shape[0] == 0:
+        return
     #根据输入的因子名称将原始因子截面数据分割
     data_to_process, data_unchanged = get_factor_data(data, factor_names)
+    if 'industry_sw2' in data_to_process.columns:
+        del data_to_process['industry_sw2']
+    if 'industry_sw3' in data_to_process.columns:
+        del data_to_process['industry_sw3']
     #预处理步骤依次进行
     name = fpath[:10]
     if visualized: plot_factor_data(visu_path, "原始值", name, data_to_process)
@@ -251,8 +263,8 @@ def process_cross_section(fpath, factor_names=None, visualized=False):
     if visualized: plot_factor_data(visu_path, "缺失值填充后", name, data_to_process)
     data_to_process = winsorize(data_to_process)                        #去极值
     if visualized: plot_factor_data(visu_path, "去极值后", name, data_to_process)
-    data_to_process = neutralize(data_to_process, industry_benchmark)   #中性化
-    if visualized: plot_factor_data(visu_path, "中性化后", name, data_to_process)
+    # data_to_process = neutralize(data_to_process, industry_benchmark)   #中性化
+    # if visualized: plot_factor_data(visu_path, "中性化后", name, data_to_process)
     data_to_process = standardize(data_to_process)                      #标准化
     if visualized: plot_factor_data(visu_path, "标准化后", name, data_to_process)
     #合并生成经过处理后的总因子文件
@@ -263,7 +275,7 @@ def process_cross_section(fpath, factor_names=None, visualized=False):
     data_final.index = range(1, len(data_final)+1)
     data_final.index.name = 'No'
     data_final.to_csv(os.path.join(save_path, fpath), encoding='gbk')
-    print(f'{name}处理完毕')
+    print(f'{name} 处理完毕')
 
 def plot_industry_comparison(factor_name, plot_data):
     global inscmp_path    
@@ -291,6 +303,7 @@ def factor_industry_comparison(panel_path, matrix_path, sub_dir_name):
     datdf, _ = get_factor_data(data, None)
     facs = datdf.columns.difference(set(info_cols)) #排除掉一些基准列
     panel_to_matrix(facs, factor_path=panel_path, save_path=matrix_path)
+    return
     #读取行业分类
     industry_citic = pd.read_csv(os.path.join(matrix_path, 'industry_zx.csv'), engine='python', encoding='gbk', index_col=[0])
     industry_citic.columns = pd.to_datetime(industry_citic.columns)

@@ -46,7 +46,8 @@ class Data:
             ]
     value_target_indicators = [
             "EP", "EPcut", "BP", "SP",
-            "NCFP", "OCFP", "DP", "G/PE"
+            # "NCFP", "OCFP", "DP", "G/PE"
+            "DP", "G/PE"
             ]
 
     growth_indicators = [
@@ -250,14 +251,16 @@ class FactorGenerater:
     def save_file(self, datdf, path):
         datdf = datdf.loc[~pd.isnull(datdf['is_open1']), :]
 
-        for col in ['name', 'industry_sw']:
+        # for col in ['name', 'industry_sw']:
+        for col in ['name']:
             datdf[col] = datdf[col].apply(str)
         datdf = datdf.loc[~datdf['name'].str.contains('0')]
 
         save_cond1 = (~datdf['name'].str.contains('ST')) #剔除ST股票
-        save_cond2 = (~pd.isnull(datdf['industry_sw'])) & (~datdf['industry_sw'].str.contains('0')) #剔除行业值为0或为空的股票
+        # save_cond2 = (~pd.isnull(datdf['industry_sw'])) & (~datdf['industry_sw'].str.contains('0')) #剔除行业值为0或为空的股票
         save_cond3 = (~pd.isnull(datdf['MKT_CAP_FLOAT'])) #剔除市值为空的股票
-        save_cond = save_cond1 & save_cond2 & save_cond3
+        # save_cond = save_cond1 & save_cond2 & save_cond3
+        save_cond = save_cond1 & save_cond3
         datdf = datdf.loc[save_cond]
 
         datdf = datdf.reset_index()
@@ -299,8 +302,8 @@ class FactorGenerater:
         del df0['delist_date']
         stocklist = df0.index.tolist()
         caldate = self.month_map[tdate]
-        df0["industry_zx"] = self.industry_citic.loc[stocklist, caldate] #中信行业分类
-        df0["industry_sw"] = df0["industry_zx"]
+        # df0["industry_zx"] = self.industry_citic.loc[stocklist, caldate] #中信行业分类
+        # df0["industry_sw"] = df0["industry_zx"]
         df0['MKT_CAP_FLOAT'] = self.mkt_cap_float_m.loc[stocklist, caldate]
         try:
             tdate = self._get_next_month_first_trade_date(tdate) #下个月第一个交易日
@@ -349,13 +352,14 @@ class FactorGenerater:
         dat1 = self._get_value_data(stocklist, caldate)
         dat2 = self._get_growth_data(stocklist, caldate)
         dat3 = self._get_finance_data(stocklist, caldate)
-        dat4 = self._get_leverage_data(stocklist, caldate)
-        dat5 = self._get_cal_data(stocklist, tdate)
-        dat6 = self._get_tech_data(stocklist, tdate)
-        res = reduce(self.concat_df, [dat1, dat2, dat3, dat4, dat5, dat6])
-        dat7 = self._get_barra_quote_data(stocklist, tdate)
-        dat8 = self._get_barra_finance_data(stocklist, tdate)
-        res = reduce(self.concat_df, [res, dat7, dat8])
+        res = reduce(self.concat_df, [dat1, dat2, dat3])
+        # dat4 = self._get_leverage_data(stocklist, caldate)
+        # dat5 = self._get_cal_data(stocklist, tdate)
+        # dat6 = self._get_tech_data(stocklist, tdate)
+        # res = reduce(self.concat_df, [dat1, dat2, dat3, dat4, dat5, dat6])
+        # dat7 = self._get_barra_quote_data(stocklist, tdate)
+        # dat8 = self._get_barra_finance_data(stocklist, tdate)
+        # res = reduce(self.concat_df, [res, dat7, dat8])
         return res
 
     def _get_value_data(self, stocks, caldate):
@@ -375,8 +379,8 @@ class FactorGenerater:
         dat['EPcut'] = 1 / self.val_pe_deducted_ttm_m.loc[stocks, date]
         dat['BP'] = 1 / self.pb_lf_m.loc[stocks, date]
         dat['SP'] = 1 / self.ps_ttm_m.loc[stocks, date]
-        dat['NCFP'] = 1 / self.pcf_ncf_ttm_m.loc[stocks, date]
-        dat['OCFP'] = 1 / self.pcf_ocf_ttm_m.loc[stocks, date]
+        # dat['NCFP'] = 1 / self.pcf_ncf_ttm_m.loc[stocks, date]
+        # dat['OCFP'] = 1 / self.pcf_ocf_ttm_m.loc[stocks, date]
         dat['DP'] = self.dividendyield2_m.loc[stocks, date]
         dat['G/PE'] = self.profit_ttm_G_m.loc[stocks, date] * dat['EP']
 
@@ -436,7 +440,7 @@ class FactorGenerater:
         #dat["profitmargin_ttm"] = self.deductedprofit_ttm.loc[stocks, date] / self.or_ttm.loc[stocks, date]
 
         #dat["assetturnover_q"] = self.qfa_roa_m.loc[stocks, date] / self.qfa_netprofitmargin_m.loc[stocks, date]
-        dat['assetturnover_ttm'] = self.turnover_ttm_m.loc[stocks, date]
+        # dat['assetturnover_ttm'] = self.turnover_ttm_m.loc[stocks, date]
 
         #dat["operationcashflowratio_q"] = self.qfa_net_cash_flows_oper_act_m.loc[stocks, date] / self.qfa_net_profit_is_m.loc[stocks, date]
         #dat["operationcashflowratio_ttm"] = self.ocfps_ttm.loc[stocks, date] / self.eps_ttm.loc[stocks, date]
@@ -524,25 +528,28 @@ class FactorGenerater:
         res = pd.DataFrame(index=stocks)
         for offset in params:
             period_d = self._get_period_d(tdate, offset=-offset, freq="M", datelist=dates)
+            period_d = list(set(period_d) & set(pct_chg.columns))
             cur_pct_chg_d = pct_chg.loc[stocks, period_d]
             cur_turnover = turnover.loc[stocks, period_d]
             wgt_pct_chg = cur_pct_chg_d * cur_turnover
-            days_wgt = cur_pct_chg_d.expanding(axis=1).apply(lambda df: np.exp(-(len(period_d) - len(df))/4/offset))
-            exp_wgt_pct_chg = wgt_pct_chg * days_wgt
+            # days_wgt = cur_pct_chg_d.expanding(axis=1).apply(lambda df: np.exp(-(len(period_d) - len(df))/4/offset))
+            # exp_wgt_pct_chg = wgt_pct_chg * days_wgt
             cur_pct_chg_m = getattr(self, f"pctchg_{offset}M", None)
             res[f"return_{offset}m"] = cur_pct_chg_m.loc[stocks, caldate]
             res[f"wgt_return_{offset}m"] = wgt_pct_chg.apply(np.nanmean, axis=1)
-            res[f"exp_wgt_return_{offset}m"] = exp_wgt_pct_chg.apply(np.nanmean, axis=1)
+            # res[f"exp_wgt_return_{offset}m"] = exp_wgt_pct_chg.apply(np.nanmean, axis=1)
             res[f"std_{offset}m"] = cur_pct_chg_d.apply(np.nanstd, axis=1)
         return res
 
     def _get_turnover_data(self, stocks, tdate, dates, params=(1,3,6,12)):
         base_period_d = self._get_period_d(tdate, offset=-2, freq="y", datelist=dates)
+        base_period_d = list(set(base_period_d) & set(self.turn.columns))
         cur_turnover_base = self.turn.loc[stocks, base_period_d]
         turnover_davg_base = cur_turnover_base.apply(np.nanmean, axis=1)
         res = pd.DataFrame(index=stocks)
         for offset in params:
             period_d = self._get_period_d(tdate, offset=-offset, freq="M", datelist=dates)
+            period_d = list(set(period_d) & set(self.turn.columns))
             cur_turnover = self.turn.loc[stocks, period_d]
             turnover_davg = cur_turnover.apply(np.nanmean, axis=1)
             res[f"turn_{offset}m"] = turnover_davg

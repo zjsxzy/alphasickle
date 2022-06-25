@@ -210,9 +210,10 @@ class RawDataFetcher(FactorGenerater):
         '''
         #-------------------------------------------------------------
         #创建一些行情指标
-        self.create_indicator("__temp_daily__", "S_DQ_ADJFACTOR", "adjfactor")
-        adjfactor = self.preprocess(self.adjfactor)
-        self.close_file(adjfactor, 'adjfactor')
+        # Wind数据
+        # self.create_indicator("__temp_daily__", "S_DQ_ADJFACTOR", "adjfactor")
+        # adjfactor = self.preprocess(self.adjfactor)
+        # self.close_file(adjfactor, 'adjfactor')
 
         self.create_indicator("__temp_daily__", "amount", "amt")
         amt = self.amt / 10 #默认每单位千元,转换为每单位万元
@@ -316,11 +317,11 @@ class TushareFetcher(RawDataFetcher):
         """ 股票基础信息
         """
         df_list = []
-        df = self.pro.stock_basic(exchange='', fields='ts_code,name,list_date,delist_date')
+        df = self.pro.stock_basic(exchange='', fields='ts_code,name,list_date,delist_date,industry')
         df_list.append(df)
-        df = self.pro.stock_basic(exchange='', fields='ts_code,name,list_date,delist_date', list_status='D')
+        df = self.pro.stock_basic(exchange='', fields='ts_code,name,list_date,delist_date,industry', list_status='D')
         df_list.append(df)
-        df = self.pro.stock_basic(exchange='', fields='ts_code,name,list_date,delist_date', list_status='P')
+        df = self.pro.stock_basic(exchange='', fields='ts_code,name,list_date,delist_date,industry', list_status='P')
         df_list.append(df)
         df = pd.concat(df_list)
         df = df.rename(columns={"list_date":"ipo_date"})
@@ -816,7 +817,7 @@ class TushareFetcher(RawDataFetcher):
             df_total_mv[caldate] = dat["total_mv"]
             print(caldate)
         #df_total_mv = df_total_mv.dropna(how='all') #删掉全为空的一行
-        print(df_total_mv.shape) #总市值指标ok
+        # print(df_total_mv.shape) #总市值指标ok
         #-------------------------------------------------------
         #现金增加额指标(季频)
         tmp_dir = os.path.join(self.root, "__temp_cashflow__") #现金流量表
@@ -845,7 +846,7 @@ class TushareFetcher(RawDataFetcher):
             df_cfps[qday] = dat["n_incr_cash_cash_equ"] #现金及现金等价物净增加额
             df_ann_date[qday] = dat["ann_date"] #财报发布日期
             print(qday)
-        print(df_cfps.shape) #现金增加额指标ok
+        # print(df_cfps.shape) #现金增加额指标ok
         #df_cfps = df_cfps.dropna(how='all') #删掉全为空的一行
         #-------------------------------------------------------
         #现金增加额指标可能有空值,利用线性插值补全(这步可以不做)
@@ -860,7 +861,7 @@ class TushareFetcher(RawDataFetcher):
                     ser[0] = ser[3]/4 #第一季度如果为空,就用全年的均值进行填充
                 ser = ser.interpolate()
             df_cfps_t.loc[ser.index, ser.name] = ser #回填
-        print(df_cfps_t.index)
+        # print(df_cfps_t.index)
         df_cfps_t.resample('A').apply(_w) #按年分组处理
         df_cfps = df_cfps_t.T #变回来:股票为索引,日期为列名
         #-------------------------------------------------------
@@ -875,9 +876,9 @@ class TushareFetcher(RawDataFetcher):
         #按时间和股票逐个开始计算
         for calday in df_result.columns: #每月最后一天
             for stock in df_result.index:
-                tmap = df_ann_date.loc[stock] #tmap索引为报告期(每季度最后一天),值为相应财报发布时间
-                tmap = tmap[tmap<calday] #在那个历史节点,只能使用已经发布的财报,防止使用未来数据
                 try:
+                    tmap = df_ann_date.loc[stock] #tmap索引为报告期(每季度最后一天),值为相应财报发布时间
+                    tmap = tmap[tmap<calday] #在那个历史节点,只能使用已经发布的财报,防止使用未来数据
                     d = tmap.index[-1] #已经发布的财报里面最近一期的时间(某季度最后一天)
                     if d.quarter == 4: #最近一期财报是年报(第4季度)
                         ttm_value = df_cfps.loc[stock, d]
@@ -887,7 +888,8 @@ class TushareFetcher(RawDataFetcher):
                         ttm_value = df_cfps.loc[stock, d] + (df_cfps.loc[stock, last_q_4] - df_cfps.loc[stock, last_q_same]) #TTM=本期+(上年年报-上年同期)
                     #总市值/现金及现金等价物净增加额(TTM)
                     df_result.loc[stock, calday] = df_total_mv.loc[stock, calday]/ttm_value
-                except:
+                except Exception as e:
+                    print(e)
                     pass
         df_result = df_result.dropna(how='all') #删掉全为空的一行
         self.close_file(df_result, "pcf_ncf_ttm_m")
