@@ -6,66 +6,66 @@ from raw_data_fetch import TushareFetcher, WindFetcher
 # Tushare数据源
 #---------------------------------------------------------------
 def TushareFetch():
-    start_dt, end_dt = '20100101', '20211231'
+    start_dt, end_dt = '20100101', '20220531'
     fetcher = TushareFetcher()
     #---------------------------------------------------------------
     # 先下载数据到本地
     #---------------------------------------------------------------
-    # fetcher.fetch_meta_data()
-    # fetcher.fetch_trade_day()
-    # fetcher.fetch_month_map()
-    # fetcher.ensure_data(fetcher.daily, "__temp_daily__", start_dt, end_dt) #日行情表
-    # fetcher.ensure_data(fetcher.suspend_d, "__temp_suspend_d__", start_dt, end_dt) #停牌表
-    # fetcher.ensure_data(fetcher.limit_list, "__temp_limit_list__", start_dt, end_dt) #涨跌停表
-    # fetcher.ensure_data(fetcher.adj_factor, "__temp_adj_factor__", start_dt, end_dt) #复权因子表
-    # fetcher.ensure_data(fetcher.daily_basic, "__temp_daily_basic__", start_dt, end_dt) #每日指标表
-    # fetcher.ensure_data(fetcher.moneyflow, "__temp_moneyflow__", start_dt, end_dt) #资金流表
-    # fetcher.ensure_data_by_q(fetcher.fina_indicator, "__temp_fina_indicator__", start_dt, end_dt) #财务指标表
-    # fetcher.ensure_data_by_q(fetcher.income, "__temp_income__", start_dt, end_dt) #利润表
-    # fetcher.ensure_data_by_q(fetcher.balancesheet, "__temp_balancesheet__", start_dt, end_dt) #资产负债表
-    # fetcher.ensure_data_by_q(fetcher.cashflow, "__temp_cashflow__", start_dt, end_dt) #现金流表
-    # fetcher.index_daily()
+    fetcher.fetch_meta_data()
+    fetcher.fetch_trade_day()
+    fetcher.fetch_month_map()
+    fetcher.ensure_data(fetcher.daily, "__temp_daily__", start_dt, end_dt) #日行情表
+    fetcher.ensure_data(fetcher.suspend_d, "__temp_suspend_d__", start_dt, end_dt) #停牌表
+    fetcher.ensure_data(fetcher.limit_list, "__temp_limit_list__", start_dt, end_dt) #涨跌停表
+    fetcher.ensure_data(fetcher.adj_factor, "__temp_adj_factor__", start_dt, end_dt) #复权因子表
+    fetcher.ensure_data(fetcher.daily_basic, "__temp_daily_basic__", start_dt, end_dt) #每日指标表
+    fetcher.ensure_data(fetcher.moneyflow, "__temp_moneyflow__", start_dt, end_dt) #资金流表
+    fetcher.ensure_data_by_q(fetcher.fina_indicator, "__temp_fina_indicator__", start_dt, end_dt) #财务指标表
+    fetcher.ensure_data_by_q(fetcher.income, "__temp_income__", start_dt, end_dt) #利润表
+    fetcher.ensure_data_by_q(fetcher.balancesheet, "__temp_balancesheet__", start_dt, end_dt) #资产负债表
+    fetcher.ensure_data_by_q(fetcher.cashflow, "__temp_cashflow__", start_dt, end_dt) #现金流表
+    fetcher.index_daily()
     # ---------------------------------------------------------------
     # 然后从本地数据生成指标
     #---------------------------------------------------------------
-    # fetcher.create_listday_matrix()
-    # fetcher.create_month_tdays_begin_end()
-    # fetcher.create_trade_status()
-    # fetcher.create_turn_d()
-    # fetcher.create_maxupordown()
-    # fetcher.create_indicator("__temp_adj_factor__", "adj_factor", "adjfactor")
-    # fetcher.create_mkt_cap_float_m(start_dt, end_dt)
-    # fetcher.create_pe_ttm_m(start_dt, end_dt)
-    # fetcher.create_val_pe_deducted_ttm_m(start_dt, end_dt)
-    # fetcher.create_pb_lf_m(start_dt, end_dt)
-    # fetcher.create_ps_ttm_m(start_dt, end_dt)
-    # fetcher.create_pcf_ncf_ttm_m(start_dt, end_dt)
-    # fetcher.create_pcf_ocf_ttm_m(start_dt, end_dt)
-    # fetcher.create_dividendyield2_m(start_dt, end_dt)
-    # fetcher.create_profit_ttm_G_m(start_dt, end_dt)
-    # fetcher.create_indicator_m_by_q("__temp_fina_indicator__", "q_sales_yoy", "qfa_yoysales_m", start_dt, end_dt)
-    # fetcher.create_indicator_m_by_q("__temp_fina_indicator__", "q_profit_yoy", "qfa_yoyprofit_m", start_dt, end_dt)
-    # fetcher.create_indicator_m_by_q("__temp_fina_indicator__", "ocf_yoy", "qfa_yoyocf_m", start_dt, end_dt) #临时替代
-    # fetcher.create_indicator_m_by_q("__temp_fina_indicator__", "roe_yoy", "qfa_roe_G_m", start_dt, end_dt) #临时替代
-    # fetcher.create_indicator_m_by_q("__temp_fina_indicator__", "q_roe", "qfa_roe_m", start_dt, end_dt)
-    # fetcher.create_indicator_m_by_q("__temp_fina_indicator__", "roe_yearly", "roe_ttm2_m", start_dt, end_dt) #临时替代
-    # fetcher.create_indicator_m_by_q("__temp_fina_indicator__", "roa", "qfa_roa_m", start_dt, end_dt) #临时替代
-    # fetcher.create_indicator_m_by_q("__temp_fina_indicator__", "roa_yearly", "roa2_ttm2_m", start_dt, end_dt) #临时替代
-    # fetcher.create_indicator_m_by_q("__temp_fina_indicator__", "q_gsprofit_margin", "qfa_grossprofitmargin_m", start_dt, end_dt)
-    # fetcher.create_indicator_m_by_q("__temp_fina_indicator__", "grossprofit_margin", "grossprofitmargin_ttm2_m", start_dt, end_dt) #临时替代
-    # fetcher.create_indicator_m_by_q("__temp_fina_indicator__", "assets_turn", "turnover_ttm_m", start_dt, end_dt) #临时替代
-    # fetcher.create_indicator_m_by_q("__temp_fina_indicator__", "assets_to_eqt", "assetstoequity_m", start_dt, end_dt)
-    # fetcher.create_indicator_m_by_q("__temp_fina_indicator__", "debt_to_eqt", "longdebttoequity_m", start_dt, end_dt) #临时替代
-    # fetcher.create_indicator_m_by_q("__temp_fina_indicator__", "cash_to_liqdebt", "cashtocurrentdebt_m", start_dt, end_dt)
-    # fetcher.create_indicator_m_by_q("__temp_fina_indicator__", "current_ratio", "current_m", start_dt, end_dt)
-    # fetcher.create_daily_quote_indicators(start_dt, end_dt)
-    # fetcher.create_indicator("__temp_daily_basic__", "circ_mv", "mkt_cap_float")
-    # fetcher.create_indicator("__temp_daily_basic__", "total_mv", "mkt_cap_ard")
-    # fetcher.create_indicator_m_by_q("__temp_fina_indicator__", "longdeb_to_debt", "longdebttodebt_lyr_m", start_dt, end_dt)
-    # fetcher.create_indicator_m_by_q("__temp_balancesheet__", "total_liab", "tot_liab_lyr_m", start_dt, end_dt)
-    # fetcher.create_indicator_m_by_q("__temp_balancesheet__", "oth_eqt_tools_p_shr", "other_equity_instruments_PRE_lyr_m", start_dt, end_dt)
-    # fetcher.create_indicator_m_by_q("__temp_balancesheet__", "total_hldr_eqy_inc_min_int", "tot_equity_lyr_m", start_dt, end_dt)
-    # fetcher.create_indicator_m_by_q("__temp_balancesheet__", "total_assets", "tot_assets_lyr_m", start_dt, end_dt)
+    fetcher.create_listday_matrix()
+    fetcher.create_month_tdays_begin_end()
+    fetcher.create_trade_status()
+    fetcher.create_turn_d()
+    fetcher.create_maxupordown()
+    fetcher.create_indicator("__temp_adj_factor__", "adj_factor", "adjfactor")
+    fetcher.create_mkt_cap_float_m(start_dt, end_dt)
+    fetcher.create_pe_ttm_m(start_dt, end_dt)
+    fetcher.create_val_pe_deducted_ttm_m(start_dt, end_dt)
+    fetcher.create_pb_lf_m(start_dt, end_dt)
+    fetcher.create_ps_ttm_m(start_dt, end_dt)
+    fetcher.create_pcf_ncf_ttm_m(start_dt, end_dt)
+    fetcher.create_pcf_ocf_ttm_m(start_dt, end_dt)
+    fetcher.create_dividendyield2_m(start_dt, end_dt)
+    fetcher.create_profit_ttm_G_m(start_dt, end_dt)
+    fetcher.create_indicator_m_by_q("__temp_fina_indicator__", "q_sales_yoy", "qfa_yoysales_m", start_dt, end_dt)
+    fetcher.create_indicator_m_by_q("__temp_fina_indicator__", "q_profit_yoy", "qfa_yoyprofit_m", start_dt, end_dt)
+    fetcher.create_indicator_m_by_q("__temp_fina_indicator__", "ocf_yoy", "qfa_yoyocf_m", start_dt, end_dt) #临时替代
+    fetcher.create_indicator_m_by_q("__temp_fina_indicator__", "roe_yoy", "qfa_roe_G_m", start_dt, end_dt) #临时替代
+    fetcher.create_indicator_m_by_q("__temp_fina_indicator__", "q_roe", "qfa_roe_m", start_dt, end_dt)
+    fetcher.create_indicator_m_by_q("__temp_fina_indicator__", "roe_yearly", "roe_ttm2_m", start_dt, end_dt) #临时替代
+    fetcher.create_indicator_m_by_q("__temp_fina_indicator__", "roa", "qfa_roa_m", start_dt, end_dt) #临时替代
+    fetcher.create_indicator_m_by_q("__temp_fina_indicator__", "roa_yearly", "roa2_ttm2_m", start_dt, end_dt) #临时替代
+    fetcher.create_indicator_m_by_q("__temp_fina_indicator__", "q_gsprofit_margin", "qfa_grossprofitmargin_m", start_dt, end_dt)
+    fetcher.create_indicator_m_by_q("__temp_fina_indicator__", "grossprofit_margin", "grossprofitmargin_ttm2_m", start_dt, end_dt) #临时替代
+    fetcher.create_indicator_m_by_q("__temp_fina_indicator__", "assets_turn", "turnover_ttm_m", start_dt, end_dt) #临时替代
+    fetcher.create_indicator_m_by_q("__temp_fina_indicator__", "assets_to_eqt", "assetstoequity_m", start_dt, end_dt)
+    fetcher.create_indicator_m_by_q("__temp_fina_indicator__", "debt_to_eqt", "longdebttoequity_m", start_dt, end_dt) #临时替代
+    fetcher.create_indicator_m_by_q("__temp_fina_indicator__", "cash_to_liqdebt", "cashtocurrentdebt_m", start_dt, end_dt)
+    fetcher.create_indicator_m_by_q("__temp_fina_indicator__", "current_ratio", "current_m", start_dt, end_dt)
+    fetcher.create_indicator("__temp_daily_basic__", "circ_mv", "mkt_cap_float")
+    fetcher.create_indicator("__temp_daily_basic__", "total_mv", "mkt_cap_ard")
+    fetcher.create_indicator_m_by_q("__temp_fina_indicator__", "longdeb_to_debt", "longdebttodebt_lyr_m", start_dt, end_dt)
+    fetcher.create_indicator_m_by_q("__temp_balancesheet__", "total_liab", "tot_liab_lyr_m", start_dt, end_dt)
+    fetcher.create_indicator_m_by_q("__temp_balancesheet__", "oth_eqt_tools_p_shr", "other_equity_instruments_PRE_lyr_m", start_dt, end_dt)
+    fetcher.create_indicator_m_by_q("__temp_balancesheet__", "total_hldr_eqy_inc_min_int", "tot_equity_lyr_m", start_dt, end_dt)
+    fetcher.create_indicator_m_by_q("__temp_balancesheet__", "total_assets", "tot_assets_lyr_m", start_dt, end_dt)
+    fetcher.create_daily_quote_indicators(start_dt, end_dt)
 
 
 #---------------------------------------------------------------
