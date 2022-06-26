@@ -10,7 +10,7 @@ def main():
     save_path = os.path.join(work_dir, 'backtest')
     # 回测参数
     benchmark = '000300.SH'
-    start_date, end_date = '20120101', '20220331'
+    start_date, end_date = '20120101', '20220531'
     # 根据已计算的历史因子得到历史股票权重
     # 进行回测的每个月必须有组合权重数据
 
