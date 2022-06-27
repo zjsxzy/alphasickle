@@ -3,6 +3,7 @@ import os
 import pandas as pd
 from index_enhance import get_market_data, plot_net_value
 from single_factor_test import Backtest_stock
+from strategy import run
 
 def main():
     # 常量
@@ -10,9 +11,11 @@ def main():
     save_path = os.path.join(work_dir, 'backtest')
     # 回测参数
     benchmark = '000300.SH'
-    start_date, end_date = '20120101', '20220531'
+    start_date, end_date = '20110101', '20220531'
+    strategies = ['gpe-roe-profitg']
     # 根据已计算的历史因子得到历史股票权重
     # 进行回测的每个月必须有组合权重数据
+    run(strategies, start_date, end_date)
 
     #接下来为回测做准备
     stock_wt = pd.read_csv(os.path.join(save_path, 'stock_wt.csv'), index_col=0)
