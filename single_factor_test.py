@@ -264,6 +264,7 @@ class Backtest_stock:
         self.position_record = {}                    #每个交易日持仓记录
         self.portfolio_record = {}                   #组合净值每日记录
         self.rf_rate = rf_rate                       #无风险利率
+        self.stocks_record = pd.DataFrame(index=stock_weights.index) # 股票每日收益贡献
 
     def get_refresh_days(self):
         """
@@ -376,6 +377,8 @@ class Backtest_stock:
         weights /= np.sum(weights)                          #保证所有权重加起来为1
         codes = weights.index
         pct_chg = self.market_data.loc[codes, date].values
+        # print(date, pct_chg * weights)
+        self.stocks_record[date] = pct_chg * weights
         return codes, np.nansum(pct_chg * weights.values)   #当天的股票收益*上期期末(当期期初)的股票权重=当天持仓盈亏
 
     def update_port_netvalue(self, date):
@@ -849,7 +852,7 @@ def single_factor_test(factors):
     print(f"检验完毕！结果见目录：{sf_test_save_path}")
     # print('*'*80)
 
-def layer_division_backtest(factors, start_date, end_date):
+def layer_division_backtest(factors, start_date, end_date, stock_pool=None):
     global sf_test_save_path
     from index_enhance import get_factor
     # start_date='2012-01-30' #月频简化回测用不上
@@ -872,6 +875,11 @@ def layer_division_backtest(factors, start_date, end_date):
         facdat = pd.read_csv(os.path.join(factor_matrix_path, openname+'.csv'), encoding='gbk', engine='python', index_col=[0])
         facdat.columns = pd.to_datetime(facdat.columns)
 
+        if stock_pool is not None:
+            stock_pool = facdat.index.intersection(stock_pool)
+            facdat = facdat.loc[stock_pool]
+
+        print('因子检验候选股票池：%d只'%(facdat.shape[0]))
         s = SingleFactorLayerDivisionBacktest(factor_name=fname, 
                                               factor_data=facdat, 
                                               num_layers=5, 

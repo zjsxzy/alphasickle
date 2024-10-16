@@ -133,12 +133,15 @@ def TushareFetch():
 # def tot_assets_lyr_m():
 #     fetcher.create_indicator_m_by_q_ex("__temp_balancesheet__", "TOT_ASSETS", "tot_assets_lyr_m")
 
-# def WindFetch():
+def WindFetch():
+    start_dt, end_dt = '20100101', '20220531'
+    fetcher = WindFetcher()
 
     #---------------------------------------------------------------
     # 先下载数据到本地
     #---------------------------------------------------------------
-    #fetcher.ensure_data(fetcher.daily, "__temp_daily__") #日行情表
+    df = fetcher.daily('2022-06-28')
+    # fetcher.ensure_data(fetcher.daily, "__temp_daily__") #日行情表
     #fetcher.ensure_data(fetcher.daily_basic, "__temp_daily_basic__") #每日指标表
     #fetcher.ensure_data_by_q(fetcher.fina_indicator, "__temp_fina_indicator__") #财务指标表
     #fetcher.ensure_data_by_q(fetcher.fina_indicator_ttm, "__temp_fina_indicator_ttm__") #财务指标(TTM)表
@@ -225,5 +228,5 @@ def TushareFetch():
     # fetcher.create_indicator_m_by_q_ex("__temp_balancesheet__", "TOT_ASSETS", "tot_assets_lyr_m")
 
 if __name__ == '__main__':
-    # WindFetch()
-    TushareFetch()
+    WindFetch()
+    # TushareFetch()

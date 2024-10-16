@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import tushare as ts
 import pymysql
+import sqlalchemy
 import os
 from retrying import retry
 from functools import wraps
@@ -1056,16 +1057,22 @@ minor                  ann_date             end_date   eps dt_eps total_revenue_
 class WindFetcher(RawDataFetcher):
 
     def __init__(self):
-        self.conn = pymysql.Connect(host='x', user='x', password='x', db='wind', charset='gbk')
+        # self.conn = pymysql.Connect(host='10.3.80.205', user='chaxun', password='chaxun123', db='winddata', charset='gbk', port=1521)
+        self.conn = sqlalchemy.create_engine("oracle://chaxun:chaxun123@10.3.80.205:1521/winddata")
+        self.engine = sqlalchemy.create_engine("oracle://chaxun:chaxun123@10.3.80.205:1521/winddata")
         super().__init__(using_fetch=True)
 
     def daily(self, t):
-        with self.conn.cursor(cursor=pymysql.cursors.DictCursor) as cursor:
+        # with self.conn.cursor(cursor=pymysql.cursors.DictCursor) as cursor:
+        connection = self.engine.raw_connection()
+        with connection.cursor() as cursor:
             sql = "SELECT * FROM ASHAREEODPRICES where TRADE_DT like '%s'" % t
+            print(sql)
             cursor.execute(sql)
             data = cursor.fetchall()
             df = pd.DataFrame(data)
             df = df.rename(columns={"S_INFO_WINDCODE":"ts_code","TRADE_DT":"trade_date","S_DQ_CLOSE":"close","S_DQ_PCTCHANGE":"pct_chg","S_DQ_VOLUME":"vol","S_DQ_AMOUNT":"amount"})
+            print(df)
             del df['CRNCY_CODE']
             del df['OBJECT_ID']
             del df['OPDATE']
